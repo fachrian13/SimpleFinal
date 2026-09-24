@@ -1943,19 +1943,34 @@ namespace input {
 	}
 }
 
+template <typename T>
+struct is_shared_ptr : std::false_type {};
+template <typename U>
+struct is_shared_ptr<std::shared_ptr<U>> : std::true_type {};
+template <typename T>
+concept Shared = is_shared_ptr<std::remove_cvref_t<T>>::value;
+
 #include <iostream>
 class Application {
 public:
 	Application() :
 		image(100, 18) {}
 
-	Application& operator <<(std::shared_ptr<Simple::Base::Node> right) {
-		node.push(std::move(right));
-		return *this;
-	}
-	Application& operator <<(std::shared_ptr<Simple::Base::Interact> right) {
-		right->focused(true);
-		interact.push(std::move(right));
+	template<typename T>
+	Application& operator <<(T&& right) {
+		using U = std::remove_cvref_t<T>;
+
+		if constexpr (Shared<T>) {
+			using Z = typename U::element_type;
+
+			if constexpr (std::derived_from<Z, Simple::Base::Node>)
+				node.push(std::forward<T>(right));
+			else if constexpr (std::derived_from<Z, Simple::Base::Interact>) {
+				right->focused(true);
+				interact.push(std::forward<T>(right));
+			}
+		}
+
 		return *this;
 	}
 	Application& operator <<(Application& (*func)(Application&)) {
@@ -1968,6 +1983,12 @@ public:
 	bool running = true;
 } simple;
 
+Application& back(Application& left) {
+	left.node.pop();
+	left.interact.pop();
+
+	return left;
+}
 Application& start(Application& left) {
 	SetConsoleOutputCP(CP_UTF8);
 

@@ -5,8 +5,8 @@
 int main() {
 	// ===== Notification =====
 
-	auto notification = [&](const char* message) {
-		auto ok = button("Ok", [&]() { simple.node.pop(); simple.interact.pop(); });
+	auto notification = [&](std::string message) {
+		auto ok = button("Ok", [&]() { simple << back; });
 		auto layout = hlayout(
 			hfiller(),
 			vlayout(
@@ -71,7 +71,7 @@ int main() {
 	auto register_username = input::text();
 	auto register_password = input::password();
 	auto register_confirm_password = input::password();
-	auto register_back = button("Back", [&]() { simple.node.pop(); simple.interact.pop(); });
+	auto register_back = button("Back", [&]() { simple << back; });
 	auto register_register = button("Register", [&]() {
 		if (register_first_name->empty())
 			notification("Please fill First Name.");
@@ -108,8 +108,7 @@ int main() {
 				register_password->clear();
 				register_confirm_password->clear();
 
-				simple.node.pop();
-				simple.interact.pop();
+				simple << back;
 
 				notification("User successfully registered.");
 			}
@@ -207,7 +206,7 @@ int main() {
 					notification("Username could not be found.");
 				else if (login_password->value() != temp.password)
 					notification("Wrong password.");
-				else notification("You are logged in.");
+				else notification(std::string("You are logged in as: ") + temp.username);
 			}
 			else notification("Could not open the file.");
 		}
