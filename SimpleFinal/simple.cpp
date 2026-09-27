@@ -145,14 +145,14 @@ int main() {
 			hlayout(
 				vlayout(
 					text("First Name"),
-					register_first_name
-				),
+					register_first_name | hflex
+				) | hflex,
 				hspace(),
 				vlayout(
 					text("Last Name"),
-					register_last_name
-				)
-			),
+					register_last_name | hflex
+				) | hflex
+			) | hflex,
 			text("Email"),
 			register_email | hflex,
 			text("Username"),
@@ -160,14 +160,14 @@ int main() {
 			hlayout(
 				vlayout(
 					text("Password"),
-					register_password
-				),
+					register_password | hflex
+				) | hflex,
 				hspace(),
 				vlayout(
 					text("Confirm Password"),
-					register_confirm_password
-				)
-			),
+					register_confirm_password | hflex
+				) | hflex
+			) | hflex,
 			vspace(2),
 			hlayout(
 				hfiller(),
@@ -175,7 +175,7 @@ int main() {
 				hspace(),
 				register_register
 			) | hflex
-		)),
+		) | width(41)),
 		hfiller()
 	);
 

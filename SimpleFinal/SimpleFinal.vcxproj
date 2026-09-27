@@ -142,7 +142,12 @@
     <ClInclude Include="simple.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="simple.cpp" />
+    <ClCompile Include="simple.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="test.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="data.bin" />
