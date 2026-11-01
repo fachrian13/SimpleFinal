@@ -1,40 +1,145 @@
 #pragma once
 
 #include <bitset>
-template<size_t T>
-using BitProperties = std::bitset<T>;
+namespace Simple {
+	template<size_t Bits>
+	using BitProperties = std::bitset<Bits>;
+}
 
 #include <functional>
-template<typename T>
-using Function = std::function<T>;
-
-#include <initializer_list>
-template<typename T>
-using InitializerList = std::initializer_list<T>;
+namespace Simple {
+	template<typename T>
+	using Function = std::function<T>;
+}
 
 #include <memory>
-template<typename T>
-using SharedPointer = std::shared_ptr<T>;
-
-#include <string>
-using String = std::string;
-
-#include <vector>
-template<typename T>
-using Vector = std::vector<T>;
+namespace Simple {
+	template<typename T>
+	using SharedMemory = std::shared_ptr<T>;
+}
 
 #include <ostream>
-using OutStream = std::ostream;
+namespace Simple {
+	using OutputStream = std::ostream;
+}
+
+#include <string>
+namespace Simple {
+	namespace To {
+		template<typename T>
+			requires std::is_integral_v<T> || std::is_floating_point_v<T>
+		constexpr auto String(T value) {
+			return std::to_string(value);
+		}
+	}
+
+	using String = std::string;
+}
+
+#include <vector>
+namespace Simple {
+	template<typename T>
+	using Vector = std::vector<T>;
+}
 
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+namespace Simple {
+	using KeyEvent = KEY_EVENT_RECORD;
+}
+
+#include <stdint.h>
+namespace Simple {
+	namespace To {
+		template<typename T>
+			requires std::is_enum_v<T> || std::is_integral_v<T>
+		constexpr auto i8(T value) {
+			return static_cast<signed char>(value);
+		}
+
+		template<typename T>
+			requires std::is_enum_v<T> || std::is_integral_v<T>
+		constexpr auto i16(T value) {
+			return static_cast<short>(value);
+		}
+
+		template<typename T>
+			requires std::is_enum_v<T> || std::is_integral_v<T>
+		constexpr auto i32(T value) {
+			return static_cast<int>(value);
+		}
+
+		template<typename T>
+			requires std::is_enum_v<T> || std::is_integral_v<T>
+		constexpr auto i64(T value) {
+			return static_cast<long long>(value);
+		}
+
+		template<typename T>
+			requires std::is_enum_v<T> || std::is_integral_v<T>
+		constexpr auto u8(T value) {
+			return static_cast<unsigned char>(value);
+		}
+
+		template<typename T>
+			requires std::is_enum_v<T> || std::is_integral_v<T>
+		constexpr auto u16(T value) {
+			return static_cast<unsigned short>(value);
+		}
+
+		template<typename T>
+			requires std::is_enum_v<T> || std::is_integral_v<T>
+		constexpr auto u32(T value) {
+			return static_cast<unsigned int>(value);
+		}
+
+		template<typename T>
+			requires std::is_enum_v<T> || std::is_integral_v<T>
+		constexpr auto u64(T value) {
+			return static_cast<unsigned long long>(value);
+		}
+	}
+
+	using i8 = signed char;
+	using i16 = short;
+	using i32 = int;
+	using i64 = long long;
+	using u8 = unsigned char;
+	using u16 = unsigned short;
+	using u32 = unsigned int;
+	using u64 = unsigned long long;
+}
+
+#include <vcruntime.h>
+namespace Simple {
+	namespace To {
+		template<typename T>
+			requires std::is_enum_v<T> || std::is_integral_v<T>
+		constexpr auto u0(T value) {
+			return static_cast<size_t>(value);
+		}
+	}
+
+	using u0 = size_t;
+}
+
+// Utility
+namespace Simple {
+	namespace To {
+		template<typename T>
+			requires std::is_enum_v<T>
+		constexpr auto Base(T value) {
+			return static_cast<std::underlying_type_t<T>>(value);
+		}
+	}
+}
 
 namespace Simple {
-	enum class Palette1 : short {
+	enum class Palette1 : u8 {
 		Default = 39
 	};
-	enum class Palette16 : short {
+	enum class Palette16 : u8 {
 		Black = 30,
 		Red = 31,
 		Green = 32,
@@ -52,7 +157,7 @@ namespace Simple {
 		BrightCyan = 96,
 		BrightWhite = 97
 	};
-	enum class Palette256 : short {
+	enum class Palette256 : u8 {
 		Black = 0,
 		Maroon = 1,
 		Green = 2,
@@ -315,31 +420,36 @@ namespace Simple {
 	class Color {
 	public:
 		Color() = default;
+
 		Color(Palette1) :
 			type(Type::Palette1),
 			red(39),
 			green(39),
 			blue(39) {}
+
 		Color(Palette16 color) :
 			type(Type::Palette16),
-			red(static_cast<short>(color)),
-			green(static_cast<short>(color)),
-			blue(static_cast<short>(color)) {}
+			red(To::Base(color)),
+			green(To::Base(color)),
+			blue(To::Base(color)) {}
+
 		Color(Palette256 color) :
 			type(Type::Palette256),
-			red(static_cast<short>(color)),
-			green(static_cast<short>(color)),
-			blue(static_cast<short>(color)) {}
-		Color(short red, short green, short blue) :
+			red(To::Base(color)),
+			green(To::Base(color)),
+			blue(To::Base(color)) {}
+
+		Color(u8 red, u8 green, u8 blue) :
 			type(Type::TrueColor),
-			red(red < 0 ? 0 : red > 255 ? 255 : red),
-			green(green < 0 ? 0 : green > 255 ? 255 : green),
-			blue(blue < 0 ? 0 : blue > 255 ? 255 : blue) {}
-		Color(short rgb[3]) :
+			red(red),
+			green(green),
+			blue(blue) {}
+
+		Color(u8 rgb[3]) :
 			type(Type::TrueColor),
-			red(rgb[0] < 0 ? 0 : rgb[0] > 255 ? 255 : rgb[0]),
-			green(rgb[1] < 0 ? 0 : rgb[1] > 255 ? 255 : rgb[1]),
-			blue(rgb[2] < 0 ? 0 : rgb[2] > 255 ? 255 : rgb[2]) {}
+			red(rgb[0]),
+			green(rgb[1]),
+			blue(rgb[2]) {}
 
 		bool operator ==(const Color& right) {
 			return type == right.type
@@ -347,8 +457,13 @@ namespace Simple {
 				&& green == right.green
 				&& blue == right.blue;
 		}
+
 		bool operator !=(const Color& right) {
 			return !(*this == right);
+		}
+
+		operator bool() {
+			return type != Type::Uninitialized;
 		}
 
 		virtual void draw(String&) = 0;
@@ -362,9 +477,9 @@ namespace Simple {
 		} type = Type::Uninitialized;
 
 	protected:
-		short red = 0;
-		short green = 0;
-		short blue = 0;
+		u8 red = 0;
+		u8 green = 0;
+		u8 blue = 0;
 	};
 	class Foreground : public Color {
 	public:
@@ -378,17 +493,17 @@ namespace Simple {
 				target.append("39");
 				break;
 			case Type::Palette16:
-				target.append(std::to_string(red));
+				target.append(To::String(red));
 				break;
 			case Type::Palette256:
 				target.append("38;5;")
-					.append(std::to_string(red));
+					.append(To::String(red));
 				break;
 			case Type::TrueColor:
 				target.append("38;2;")
-					.append(std::to_string(red) + ";")
-					.append(std::to_string(green) + ";")
-					.append(std::to_string(blue));
+					.append(To::String(red) + ";")
+					.append(To::String(green) + ";")
+					.append(To::String(blue));
 				break;
 			}
 			target.append("m");
@@ -406,17 +521,17 @@ namespace Simple {
 				target.append("49");
 				break;
 			case Type::Palette16:
-				target.append(std::to_string(red + 10));
+				target.append(To::String(red + 10));
 				break;
 			case Type::Palette256:
 				target.append("48;5;")
-					.append(std::to_string(red));
+					.append(To::String(red));
 				break;
 			case Type::TrueColor:
 				target.append("48;2;")
-					.append(std::to_string(red) + ";")
-					.append(std::to_string(green) + ";")
-					.append(std::to_string(blue));
+					.append(To::String(red) + ";")
+					.append(To::String(green) + ";")
+					.append(To::String(blue));
 				break;
 			}
 			target.append("m");
@@ -428,42 +543,48 @@ namespace Simple {
 		String character = " ";
 		Foreground foreground;
 		Background background;
-		BitProperties<32> properties;
+		BitProperties<8> style;
 	};
 
 	class Rectangle {
 	public:
-		short width() const { return right - left; }
-		short height() const { return bottom - top; }
+		i16 width() const { return right - left; }
+		i16 height() const { return bottom - top; }
 
-		short left = 0;
-		short top = 0;
-		short right = 0;
-		short bottom = 0;
+		i16 left = 0;
+		i16 top = 0;
+		i16 right = 0;
+		i16 bottom = 0;
 	};
 
 	class Image {
 	public:
 		Image() = default;
-		Image(short width, short height) :
+
+		Image(i16 width, i16 height) :
 			width(width),
 			height(height),
 			pixels(width * height) {}
 
-		Pixel& at(short x, short y) {
+		Pixel& at(i16 x, i16 y) {
 			static Pixel nullpxl;
 			if ((x < 0) || (x >= width) || (y < 0) || (y >= height))
 				return nullpxl;
 
-			return pixels.at(y * width + x);
+			return pixels.at(width * y + x);
 		}
 
-		Rectangle size() { return { 0, 0, width, height }; }
+		Rectangle size() {
+			return { 0, 0, width, height };
+		}
 
-		void clear() { std::fill(pixels.begin(), pixels.end(), Pixel{}); }
+		void clear() {
+			std::fill(pixels.begin(), pixels.end(), Pixel{});
+		}
+
 		void clear(Rectangle position) {
-			for (short y = position.top; y < position.bottom; ++y)
-				for (short x = position.left; x < position.right; ++x)
+			for (i16 y = position.top; y < position.bottom; ++y)
+				for (i16 x = position.left; x < position.right; ++x)
 					at(x, y) = Pixel{};
 		}
 
@@ -472,8 +593,8 @@ namespace Simple {
 			const char* off[] = { "22;", "22;", "23;", "24;", "25;", "27;", "28;", "29;" };
 
 			Pixel prev;
-			for (short y = 0; y < height; ++y) {
-				for (short x = 0; x < width; ++x) {
+			for (i16 y = 0; y < height; ++y, target.append("\n")) {
+				for (i16 x = 0; x < width; ++x) {
 					Pixel& next = at(x, y);
 
 					if (next.foreground != prev.foreground)
@@ -482,11 +603,11 @@ namespace Simple {
 					if (next.background != prev.background)
 						next.background.draw(target);
 
-					if (next.properties != prev.properties) {
+					if (next.style != prev.style) {
 						target.append("\x1b[");
 						for (short i = 0; i < 8; ++i)
-							if (next.properties[i] != prev.properties[i])
-								target.append(next.properties[i] ? on[i] : off[i]);
+							if (next.style[i] != prev.style[i])
+								target.append(next.style[i] ? on[i] : off[i]);
 						target.pop_back();
 						target.append("m");
 					}
@@ -495,32 +616,31 @@ namespace Simple {
 
 					prev = next;
 				}
-
-				target.append("\n");
 			}
 
 			target.pop_back();
 			target.append("\x1b[m");
 		}
-		void draw(OutStream& target) {
+
+		void draw(OutputStream& target) {
 			String output = "\x1b[H";
 
 			draw(output);
-			target << output;
+			target << std::move(output);
 		}
 
 	private:
 		Vector<Pixel> pixels;
-		short width = 0;
-		short height = 0;
+		i16 width = 0;
+		i16 height = 0;
 	};
 
 	namespace Utf8 {
-		size_t size(const String& target) {
-			size_t result = 0;
+		u0 size(const String& target) {
+			u0 result = 0;
 
-			for (size_t i = 0; i < target.size(); ++result) {
-				unsigned char ch = target.at(i);
+			for (u0 i = 0; i < target.size(); ++result) {
+				u8 ch = target.at(i);
 
 				if (ch < 0x80) i += 1;
 				else if ((ch & 0xE0) == 0xC0) i += 2;
@@ -532,9 +652,9 @@ namespace Simple {
 			return result;
 		}
 
-		String at(const String& target, size_t& temp_index) {
-			unsigned char ch = target.at(temp_index);
-			short char_size = 0;
+		String at(const String& target, u0& temp_index) {
+			u8 ch = target.at(temp_index);
+			u8 char_size = 0;
 
 			if (ch < 0x80) char_size = 1;
 			else if ((ch & 0xE0) == 0xC0) char_size = 2;
@@ -546,32 +666,9 @@ namespace Simple {
 
 			return target.substr((temp_index - char_size), char_size);
 		}
-		String at(const String& target, size_t&& index) {
-			for (size_t i = 0, current = 0; i < target.size(); ++current) {
-				String ch = at(target, i);
 
-				if (current == index)
-					return ch;
-			}
-
-			return "";
-		}
-		String at(const String& target, short& temp_index) {
-			unsigned char ch = target.at(temp_index);
-			short char_size = 0;
-
-			if (ch < 0x80) char_size = 1;
-			else if ((ch & 0xE0) == 0xC0) char_size = 2;
-			else if ((ch & 0xF0) == 0xE0) char_size = 3;
-			else if ((ch & 0xF8) == 0xF0) char_size = 4;
-			else return "";
-
-			temp_index += char_size;
-
-			return target.substr((temp_index - char_size), char_size);
-		}
-		String at(const String& target, short&& index) {
-			for (short i = 0, current = 0; i < target.size(); ++current) {
+		String at(const String& target, u0&& index) {
+			for (u0 i = 0, current = 0; i < target.size(); ++current) {
 				String ch = at(target, i);
 
 				if (current == index)
@@ -583,7 +680,7 @@ namespace Simple {
 	}
 
 	namespace Base {
-		enum NodeProperties : short {
+		enum class NodeProperties : u8 {
 			Bold,
 			Dim,
 			Italic,
@@ -597,7 +694,7 @@ namespace Simple {
 			InitializedWidth,
 			InitializedHeight
 		};
-		enum BorderCell : short {
+		enum class BorderChar : u8 {
 			Horizontal,
 			Vertical,
 			TopLeft,
@@ -618,10 +715,15 @@ namespace Simple {
 			virtual void draw(Image&) {}
 
 		protected:
-			inline void init_size(short width, short height) {
-				if (!properties[InitializedWidth]) this->width = width;
-				if (!properties[InitializedHeight]) this->height = height;
+			template<typename W, typename H>
+				requires std::is_integral_v<W> && std::is_integral_v<H>
+			inline void init_size(W width, H height) {
+				if (!properties[To::Base(NodeProperties::InitializedWidth)])
+					this->width = To::i16(width);
+				if (!properties[To::Base(NodeProperties::InitializedHeight)])
+					this->height = To::i16(height);
 			}
+
 			inline void draw_style(Pixel& target) {
 				if (foreground.type != Color::Type::Uninitialized)
 					target.foreground = foreground;
@@ -629,11 +731,13 @@ namespace Simple {
 				if (background.type != Color::Type::Uninitialized)
 					target.background = background;
 
-				target.properties = properties;
+				for (u8 i = 0; i < 8; ++i)
+					target.style[i] = properties[i];
 			}
+
 			inline void draw_style(Image& target) {
-				for (short y = position.top; y < position.bottom; ++y)
-					for (short x = position.left; x < position.right; ++x)
+				for (i16 y = position.top; y < position.bottom; ++y)
+					for (i16 x = position.left; x < position.right; ++x)
 						draw_style(target.at(x, y));
 			}
 
@@ -642,8 +746,8 @@ namespace Simple {
 			Background background;
 			Rectangle position;
 			BitProperties<32> properties;
-			short width = 0;
-			short height = 0;
+			i16 width = 0;
+			i16 height = 0;
 		};
 		class Interact {
 		public:
@@ -653,25 +757,26 @@ namespace Simple {
 			bool looping() const { return loop; }
 			virtual void looping(bool value) { loop = value; }
 
-			virtual bool onkey(const KEY_EVENT_RECORD&) { return false; }
+			virtual bool onkey(const KeyEvent&) { return false; }
 
 		protected:
 			bool focus = false;
 			bool loop = false;
 		};
 
-		class Text : public Node {
+		class Text final : public Node {
 		public:
 			Text(String content) :
 				content(std::move(content)) {}
 
 		public: // Node
 			void init() override {
-				init_size(static_cast<short>(content.size()), 1);
+				init_size(content.size(), 1);
 			}
+
 			void draw(Image& target) override {
-				for (short i = 0, y = position.top; y < position.bottom; ++y) {
-					for (short x = position.left; x < position.right; ++x) {
+				for (i16 i = 0, y = position.top; y < position.bottom; ++y) {
+					for (i16 x = position.left; x < position.right; ++x) {
 						Pixel& p = target.at(x, y);
 
 						draw_style(p);
@@ -685,9 +790,9 @@ namespace Simple {
 		private:
 			String content;
 		};
-		class HorizontalLayout : public Node {
+		class HorizontalLayout final : public Node {
 		public:
-			HorizontalLayout(InitializerList<SharedPointer<Node>> nodes) :
+			HorizontalLayout(Vector<SharedMemory<Node>> nodes) :
 				nodes(std::move(nodes)) {}
 
 		public: // Node
@@ -697,26 +802,27 @@ namespace Simple {
 				for (const auto& node : nodes) {
 					node->init();
 
-					if (!properties[InitializedWidth])
+					if (!properties[To::Base(NodeProperties::InitializedWidth)])
 						width += node->width;
-					if (!properties[InitializedHeight])
+					if (!properties[To::Base(NodeProperties::InitializedHeight)])
 						height = std::max(height, node->height);
 				}
 			}
+
 			void set(Rectangle position) override {
 				Node::set(position);
 
-				short total_nodes_flex = 0;
-				short total_nodes_width = 0;
+				i16 total_nodes_flex = 0;
+				i16 total_nodes_width = 0;
 				for (const auto& node : nodes) {
-					total_nodes_flex += node->properties[HorizontalFlex];
+					total_nodes_flex += node->properties[To::Base(NodeProperties::HorizontalFlex)];
 					total_nodes_width += node->width;
 				}
 
-				short extra_space = position.width() - total_nodes_width;
+				i16 extra_space = position.width() - total_nodes_width;
 				for (const auto& node : nodes) {
-					if (node->properties[HorizontalFlex]) {
-						short added_space = extra_space / std::max(total_nodes_flex, static_cast<short>(1));
+					if (node->properties[To::Base(NodeProperties::HorizontalFlex)]) {
+						i16 added_space = extra_space / std::max(total_nodes_flex, To::i16(1));
 
 						position.right = position.left + node->width + added_space;
 						extra_space -= added_space;
@@ -724,7 +830,7 @@ namespace Simple {
 					}
 					else position.right = position.left + node->width;
 
-					if (node->properties[VerticalFlex])
+					if (node->properties[To::Base(NodeProperties::VerticalFlex)])
 						position.bottom = this->position.bottom;
 					else position.bottom = position.top + node->height;
 
@@ -733,17 +839,20 @@ namespace Simple {
 					position.left = position.right;
 				}
 			}
+
 			void draw(Image& target) override {
+				draw_style(target);
+
 				for (const auto& node : nodes)
 					node->draw(target);
 			}
 
 		private:
-			Vector<SharedPointer<Node>> nodes;
+			Vector<SharedMemory<Node>> nodes;
 		};
 		class VerticalLayout : public Node {
 		public:
-			VerticalLayout(InitializerList<SharedPointer<Node>> nodes) :
+			VerticalLayout(Vector<SharedMemory<Node>> nodes) :
 				nodes(std::move(nodes)) {}
 
 		public: // Node
@@ -753,30 +862,31 @@ namespace Simple {
 				for (const auto& node : nodes) {
 					node->init();
 
-					if (!properties[InitializedWidth])
+					if (!properties[To::Base(NodeProperties::InitializedWidth)])
 						width = std::max(width, node->width);
-					if (!properties[InitializedHeight])
+					if (!properties[To::Base(NodeProperties::InitializedHeight)])
 						height += node->height;
 				}
 			}
+
 			void set(Rectangle position) override {
 				Node::set(position);
 
-				short total_nodes_flex = 0;
-				short total_nodes_height = 0;
+				i16 total_nodes_flex = 0;
+				i16 total_nodes_height = 0;
 				for (const auto& node : nodes) {
-					total_nodes_flex += node->properties[VerticalFlex];
+					total_nodes_flex += node->properties[To::Base(NodeProperties::VerticalFlex)];
 					total_nodes_height += node->height;
 				}
 
-				short extra_space = position.height() - total_nodes_height;
+				i16 extra_space = position.height() - total_nodes_height;
 				for (const auto& node : nodes) {
-					if (node->properties[HorizontalFlex])
+					if (node->properties[To::Base(NodeProperties::HorizontalFlex)])
 						position.right = this->position.right;
 					else position.right = position.left + node->width;
 
-					if (node->properties[VerticalFlex]) {
-						short added_space = extra_space / std::max(total_nodes_flex, static_cast<short>(1));
+					if (node->properties[To::Base(NodeProperties::VerticalFlex)]) {
+						i16 added_space = extra_space / std::max(total_nodes_flex, To::i16(1));
 
 						position.bottom = position.top + node->height + added_space;
 						extra_space -= added_space;
@@ -789,37 +899,40 @@ namespace Simple {
 					position.top = position.bottom;
 				}
 			}
+
 			void draw(Image& target) override {
+				draw_style(target);
+
 				for (const auto& node : nodes)
 					node->draw(target);
 			}
 
 		private:
-			Vector<SharedPointer<Node>> nodes;
+			Vector<SharedMemory<Node>> nodes;
 		};
-		class Filler : public Node {
+		class Filler final : public Node {
 		public: // Node
 			void init() override {
-				properties[HorizontalFlex] = true;
-				properties[VerticalFlex] = true;
+				properties[To::Base(NodeProperties::HorizontalFlex)] = true;
+				properties[To::Base(NodeProperties::VerticalFlex)] = true;
 			}
 		};
-		class HorizontalFiller : public Node {
+		class HorizontalFiller final : public Node {
 		public: // Node
 			void init() override {
-				properties[HorizontalFlex] = true;
+				properties[To::Base(NodeProperties::HorizontalFlex)] = true;
 			}
 		};
-		class VerticalFiller : public Node {
+		class VerticalFiller final : public Node {
 		public: // Node
 			void init() override {
-				properties[VerticalFlex] = true;
+				properties[To::Base(NodeProperties::VerticalFlex)] = true;
 			}
 		};
 		class Space : public Node {
 		public:
 			Space() = default;
-			Space(short size) :
+			Space(i16 size) :
 				size(size) {}
 
 		public: // Node
@@ -829,10 +942,10 @@ namespace Simple {
 			}
 
 		protected:
-			short size = 1;
+			i16 size = 1;
 		};
-		class HorizontalSpace : public Space {
-		public:
+		class HorizontalSpace final : public Space {
+		public: // Space
 			using Space::Space;
 
 		public: // Node
@@ -840,8 +953,8 @@ namespace Simple {
 				width = size;
 			}
 		};
-		class VerticalSpace : public Space {
-		public:
+		class VerticalSpace final : public Space {
+		public: // Space
 			using Space::Space;
 
 		public: // Node
@@ -849,9 +962,9 @@ namespace Simple {
 				height = size;
 			}
 		};
-		class Border : public Node {
+		class Border final : public Node {
 		public:
-			Border(SharedPointer<Node> node, String style) :
+			Border(SharedMemory<Node> node, String style) :
 				node(std::move(node)),
 				style(std::move(style)) {}
 
@@ -862,30 +975,31 @@ namespace Simple {
 				width = 2 + node->width;
 				height = 2 + node->height;
 			}
+
 			void set(Rectangle position) override {
 				Node::set(position);
 
-				node->set({
-					static_cast<short>(position.left + 1),
-					static_cast<short>(position.top + 1),
-					static_cast<short>(position.right - 1),
-					static_cast<short>(position.bottom - 1)
-					});
+				++position.left;
+				++position.top;
+				--position.right;
+				--position.bottom;
+				node->set(position);
 			}
-			void draw(Image& target) override {
-				target.at(position.left, position.top).character = Utf8::at(style, TopLeft);
-				target.at(position.right - 1, position.top).character = Utf8::at(style, TopRight);
-				target.at(position.left, position.bottom - 1).character = Utf8::at(style, BottomLeft);
-				target.at(position.right - 1, position.bottom - 1).character = Utf8::at(style, BottomRight);
 
-				for (int x = position.left + 1; x < position.right - 1; ++x) {
-					target.at(x, position.top).character = Utf8::at(style, Horizontal);
-					target.at(x, position.bottom - 1).character = Utf8::at(style, Horizontal);
+			void draw(Image& target) override {
+				target.at(position.left, position.top).character = Utf8::at(style, To::Base(BorderChar::TopLeft));
+				target.at(position.right - 1, position.top).character = Utf8::at(style, To::Base(BorderChar::TopRight));
+				target.at(position.left, position.bottom - 1).character = Utf8::at(style, To::Base(BorderChar::BottomLeft));
+				target.at(position.right - 1, position.bottom - 1).character = Utf8::at(style, To::Base(BorderChar::BottomRight));
+
+				for (i16 x = position.left + 1; x < position.right - 1; ++x) {
+					target.at(x, position.top).character = Utf8::at(style, To::Base(BorderChar::Horizontal));
+					target.at(x, position.bottom - 1).character = Utf8::at(style, To::Base(BorderChar::Horizontal));
 				}
 
-				for (int y = position.top + 1; y < position.bottom - 1; ++y) {
-					target.at(position.left, y).character = Utf8::at(style, Vertical);
-					target.at(position.right - 1, y).character = Utf8::at(style, Vertical);
+				for (i16 y = position.top + 1; y < position.bottom - 1; ++y) {
+					target.at(position.left, y).character = Utf8::at(style, To::Base(BorderChar::Vertical));
+					target.at(position.right - 1, y).character = Utf8::at(style, To::Base(BorderChar::Vertical));
 				}
 
 				node->draw(target);
@@ -893,14 +1007,15 @@ namespace Simple {
 
 		private:
 			String style;
-			SharedPointer<Node> node;
+			SharedMemory<Node> node;
 		};
-		class HorizontalSeparator : public Node {
+		class HorizontalSeparator final : public Node {
 		public: // Node
 			void init() override {
 				height = 1;
-				properties[HorizontalFlex] = true;
+				properties[To::Base(NodeProperties::HorizontalFlex)] = true;
 			}
+
 			void draw(Image& target) override {
 				Pixel& leftchar = target.at((position.left - 1), position.top);
 				if (leftchar.character == "│")
@@ -910,32 +1025,34 @@ namespace Simple {
 				if (rightchar.character == "│")
 					rightchar.character = "┤";
 
-				for (short y = position.top; y < position.bottom; ++y)
-					for (short x = position.left; x < position.right; ++x)
+				for (i16 y = position.top; y < position.bottom; ++y)
+					for (i16 x = position.left; x < position.right; ++x)
 						target.at(x, y).character = "─";
 			}
 		};
 
-		class Button : public Node, public Interact {
+		class Button final : public Node, public Interact {
 		public:
 			Button(String name) :
 				name(std::move(name)) {}
+
 			Button(String name, Function<void()> func) :
 				name(std::move(name)),
 				func(std::move(func)) {}
 
 		public: // Node
 			void init() override {
-				init_size(static_cast<short>(2 + name.size()), 1);
+				init_size(2 + name.size(), 1);
 
 				foreground = Palette256::Black;
 				background = focused() ? Palette256::White : Palette256::Gray6;
 			}
-			void draw(Image& target) override {
-				short xpos = position.left + ((position.width() - static_cast<short>(name.size())) / 2);
 
-				for (short i = 0, y = position.top; y < position.bottom; ++y) {
-					for (short x = position.left; x < position.right; ++x) {
+			void draw(Image& target) override {
+				i16 xpos = position.left + ((position.width() - To::i16(name.size())) / 2);
+
+				for (i16 i = 0, y = position.top; y < position.bottom; ++y) {
+					for (i16 x = position.left; x < position.right; ++x) {
 						Pixel& p = target.at(x, y);
 
 						draw_style(p);
@@ -947,10 +1064,12 @@ namespace Simple {
 			}
 
 		public: // Interact
-			bool onkey(const KEY_EVENT_RECORD& key) override {
-				if ((key.wVirtualKeyCode == VK_RETURN)
+			bool onkey(const KeyEvent& key) override {
+				if (
+					(key.wVirtualKeyCode == VK_RETURN)
 					&& focused()
-					&& func) {
+					&& func
+					) {
 					func();
 					return true;
 				}
@@ -962,9 +1081,9 @@ namespace Simple {
 			String name;
 			Function<void()> func;
 		};
-		class HorizontalContainer : public Interact {
+		class HorizontalContainer final : public Interact {
 		public:
-			HorizontalContainer(InitializerList<SharedPointer<Interact>> interacts) :
+			HorizontalContainer(Vector<SharedMemory<Interact>> interacts) :
 				interacts(std::move(interacts)) {}
 
 		public: // Interact
@@ -973,7 +1092,8 @@ namespace Simple {
 
 				interacts.at(index)->focused(value);
 			}
-			bool onkey(const KEY_EVENT_RECORD& key) override {
+
+			bool onkey(const KeyEvent& key) override {
 				if (interacts.at(index)->onkey(key))
 					return true;
 
@@ -1007,12 +1127,12 @@ namespace Simple {
 			}
 
 		private:
-			Vector<SharedPointer<Interact>> interacts;
-			short index = 0;
+			Vector<SharedMemory<Interact>> interacts;
+			i16 index = 0;
 		};
-		class VerticalContainer : public Interact {
+		class VerticalContainer final : public Interact {
 		public:
-			VerticalContainer(InitializerList<SharedPointer<Interact>> interacts) :
+			VerticalContainer(Vector<SharedMemory<Interact>> interacts) :
 				interacts(std::move(interacts)) {}
 
 		public: // Interact
@@ -1021,7 +1141,8 @@ namespace Simple {
 
 				interacts.at(index)->focused(value);
 			}
-			bool onkey(const KEY_EVENT_RECORD& key) override {
+
+			bool onkey(const KeyEvent& key) override {
 				if (interacts.at(index)->onkey(key))
 					return true;
 
@@ -1055,27 +1176,29 @@ namespace Simple {
 			}
 
 		private:
-			Vector<SharedPointer<Interact>> interacts;
-			short index = 0;
+			Vector<SharedMemory<Interact>> interacts;
+			i16 index = 0;
 		};
-		class Link : public Node, public Interact {
+		class Link final : public Node, public Interact {
 		public:
 			Link(String name) :
 				name(std::move(name)) {}
+
 			Link(String name, Function<void()> func) :
 				name(std::move(name)),
 				func(std::move(func)) {}
 
 		public: // Node
 			void init() override {
-				init_size(static_cast<short>(name.size()), 1);
+				init_size(name.size(), 1);
 
-				properties[Underline] = true;
-				properties[Reverse] = focused() ? true : false;
+				properties[To::Base(NodeProperties::Underline)] = true;
+				properties[To::Base(NodeProperties::Reverse)] = focused() ? true : false;
 			}
+
 			void draw(Image& target) override {
-				for (short i = 0, y = position.top; y < position.bottom; ++y) {
-					for (short x = position.left; x < position.right; ++x) {
+				for (i16 i = 0, y = position.top; y < position.bottom; ++y) {
+					for (i16 x = position.left; x < position.right; ++x) {
 						Pixel& p = target.at(x, y);
 
 						draw_style(p);
@@ -1087,10 +1210,12 @@ namespace Simple {
 			}
 
 		public: // Interact
-			bool onkey(const KEY_EVENT_RECORD& key) override {
-				if ((key.wVirtualKeyCode == VK_RETURN)
+			bool onkey(const KeyEvent& key) override {
+				if (
+					(key.wVirtualKeyCode == VK_RETURN)
 					&& focused()
-					&& func) {
+					&& func
+					) {
 					func();
 					return true;
 				}
@@ -1102,9 +1227,9 @@ namespace Simple {
 			String name;
 			Function<void()> func;
 		};
-		class CheckBoxList : public Node, public Interact {
+		class CheckBoxList final : public Node, public Interact {
 		public:
-			CheckBoxList(InitializerList<String> items) :
+			CheckBoxList(Vector<String> items) :
 				items(std::move(items)) {}
 
 		public: // Node
@@ -1114,9 +1239,10 @@ namespace Simple {
 				foreground = Palette256::Black;
 				background = focused() ? Palette256::White : Palette256::Gray6;
 			}
+
 			void draw(Image& target) override {
-				for (short ii = item_begin, y = position.top; y < position.bottom; ++ii, ++y) {
-					for (short i = 0, x = position.left; x < position.right; ++x) {
+				for (i16 ii = item_begin, y = position.top; y < position.bottom; ++ii, ++y) {
+					for (i16 i = 0, x = position.left; x < position.right; ++x) {
 						Pixel& p = target.at(x, y);
 						String item = prefix(ii) + items.at(ii);
 
@@ -1129,11 +1255,11 @@ namespace Simple {
 
 				if (looping())
 					for (; position.left < position.right; ++position.left)
-						target.at(position.left, (position.top + ycursor)).properties[Reverse] = true;
+						target.at(position.left, (position.top + ycursor)).style[To::Base(NodeProperties::Reverse)] = true;
 			}
 
 		public: // Interact
-			bool onkey(const KEY_EVENT_RECORD& key) override {
+			bool onkey(const KeyEvent& key) override {
 				if (key.wVirtualKeyCode == VK_RETURN)
 					looping(!looping());
 
@@ -1166,8 +1292,8 @@ namespace Simple {
 			}
 
 		private:
-			void move_cursor(short y) {
-				const short height = position.height();
+			void move_cursor(i16 y) {
+				const i16 height = position.height();
 
 				if (y > 0)
 					if (ycursor < (height - 1)) ++ycursor;
@@ -1177,7 +1303,7 @@ namespace Simple {
 					else --item_begin;
 			}
 
-			String prefix(const short& index) {
+			String prefix(const i16& index) {
 				if ((!selected_items.empty())
 					&& (std::find(selected_items.begin(), selected_items.end(), index) != selected_items.end()))
 					return "[■]";
@@ -1186,14 +1312,14 @@ namespace Simple {
 			}
 
 			Vector<String> items;
-			Vector<short> selected_items;
-			short item_begin = 0;
-			short index = 0;
-			short ycursor = 0;
+			Vector<i16> selected_items;
+			i16 item_begin = 0;
+			i16 index = 0;
+			i16 ycursor = 0;
 		};
-		class RadioBoxList : public Node, public Interact {
+		class RadioBoxList final : public Node, public Interact {
 		public:
-			RadioBoxList(InitializerList<String> items) :
+			RadioBoxList(Vector<String> items) :
 				items(std::move(items)) {}
 
 		public: // Node
@@ -1203,9 +1329,10 @@ namespace Simple {
 				foreground = Palette256::Black;
 				background = focused() ? Palette256::White : Palette256::Gray6;
 			}
+
 			void draw(Image& target) override {
-				for (short ii = item_begin, y = position.top; y < position.bottom; ++ii, ++y) {
-					for (short i = 0, x = position.left; x < position.right; ++x) {
+				for (i16 ii = item_begin, y = position.top; y < position.bottom; ++ii, ++y) {
+					for (i16 i = 0, x = position.left; x < position.right; ++x) {
 						Pixel& p = target.at(x, y);
 						String item = prefix(ii) + items.at(ii);
 
@@ -1218,11 +1345,11 @@ namespace Simple {
 
 				if (looping())
 					for (; position.left < position.right; ++position.left)
-						target.at(position.left, (position.top + ycursor)).properties[Reverse] = true;
+						target.at(position.left, (position.top + ycursor)).style[To::Base(NodeProperties::Reverse)] = true;
 			}
 
 		public: // Interact
-			bool onkey(const KEY_EVENT_RECORD& key) override {
+			bool onkey(const KeyEvent& key) override {
 				if (key.wVirtualKeyCode == VK_RETURN)
 					looping(!looping());
 
@@ -1256,8 +1383,8 @@ namespace Simple {
 
 
 		private:
-			void move_cursor(short y) {
-				const short height = position.height();
+			void move_cursor(i16 y) {
+				const i16 height = position.height();
 
 				if (y > 0)
 					if (ycursor < (height - 1)) ++ycursor;
@@ -1267,7 +1394,7 @@ namespace Simple {
 					else --item_begin;
 			}
 
-			String prefix(const short& index) {
+			String prefix(const i16& index) {
 				if ((selected_item >= 0) && (index == selected_item))
 					return "(●)";
 
@@ -1275,15 +1402,16 @@ namespace Simple {
 			}
 
 			Vector<String> items;
-			short selected_item = -1;
-			short item_begin = 0;
-			short index = 0;
-			short ycursor = 0;
+			i16 selected_item = -1;
+			i16 item_begin = 0;
+			i16 index = 0;
+			i16 ycursor = 0;
 		};
 		namespace Input {
 			class Base : public Node, public Interact {
 			public:
 				Base() = default;
+
 				Base(String placeholder) :
 					placeholder(std::move(placeholder)) {}
 
@@ -1308,7 +1436,7 @@ namespace Simple {
 				}
 
 			protected:
-				void move_cursor(short x, short y, const short& width, const short& height) {
+				void move_cursor(i16 x, i16 y, const i16& width, const i16& height) {
 					if (x > 0)
 						if (xcursor < (width - 1)) ++xcursor;
 						else if (ycursor < (height - 1)) xcursor = 0, ++ycursor;
@@ -1326,7 +1454,7 @@ namespace Simple {
 						else text_begin -= width;
 				}
 
-				String repeat(short times, const String& value) {
+				String repeat(i16 times, const String& value) {
 					String temp;
 
 					while (times--) temp.append(value);
@@ -1335,20 +1463,20 @@ namespace Simple {
 
 				String content;
 				String placeholder;
-				short text_begin = 0;
-				short index = 0;
-				short xcursor = 0;
-				short ycursor = 0;
+				i16 text_begin = 0;
+				i16 index = 0;
+				i16 xcursor = 0;
+				i16 ycursor = 0;
 			};
-			class Text : public Base {
-			public:
+			class Text final : public Base {
+			public: // Base
 				using Base::Base;
 
 			public: // Node
 				void draw(Image& target) override {
 					const String& text = content.empty() ? placeholder : content;
-					for (short i = text_begin, y = position.top; y < position.bottom; ++y) {
-						for (short x = position.left; x < position.right; ++x) {
+					for (i16 i = text_begin, y = position.top; y < position.bottom; ++y) {
+						for (i16 x = position.left; x < position.right; ++x) {
 							Pixel& p = target.at(x, y);
 
 							draw_style(p);
@@ -1359,17 +1487,17 @@ namespace Simple {
 					}
 
 					if (looping())
-						target.at(position.left + xcursor, position.top + ycursor).properties[Reverse] = true;
+						target.at(position.left + xcursor, position.top + ycursor).style[To::Base(NodeProperties::Reverse)] = true;
 				}
 
 			public: // Interact
-				bool onkey(const KEY_EVENT_RECORD& key) override {
+				bool onkey(const KeyEvent& key) override {
 					if (key.wVirtualKeyCode == VK_RETURN)
 						looping(!looping());
 
 					if (looping()) {
-						const short width = position.width();
-						const short height = position.height();
+						const i16 width = position.width();
+						const i16 height = position.height();
 
 						switch (key.wVirtualKeyCode) {
 						case VK_LEFT:
@@ -1438,15 +1566,15 @@ namespace Simple {
 					return false;
 				}
 			};
-			class Number : public Base {
-			public:
+			class Number final : public Base {
+			public: // Base
 				using Base::Base;
 
 			public: // Node
 				void draw(Image& target) override {
 					const String& text = content.empty() ? placeholder : content;
-					for (short i = text_begin, y = position.top; y < position.bottom; ++y) {
-						for (short x = position.left; x < position.right; ++x) {
+					for (i16 i = text_begin, y = position.top; y < position.bottom; ++y) {
+						for (i16 x = position.left; x < position.right; ++x) {
 							Pixel& p = target.at(x, y);
 
 							draw_style(p);
@@ -1457,17 +1585,17 @@ namespace Simple {
 					}
 
 					if (looping())
-						target.at(position.left + xcursor, position.top + ycursor).properties[Reverse] = true;
+						target.at(position.left + xcursor, position.top + ycursor).style[To::Base(NodeProperties::Reverse)] = true;
 				}
 
 			public: // Interact
-				bool onkey(const KEY_EVENT_RECORD& key) override {
+				bool onkey(const KeyEvent& key) override {
 					if (key.wVirtualKeyCode == VK_RETURN)
 						looping(!looping());
 
 					if (looping()) {
-						const short width = position.width();
-						const short height = position.height();
+						const i16 width = position.width();
+						const i16 height = position.height();
 
 						switch (key.wVirtualKeyCode) {
 						case VK_LEFT:
@@ -1536,15 +1664,15 @@ namespace Simple {
 					return false;
 				}
 			};
-			class Password : public Base {
+			class Password final : public Base {
 			public:
 				using Base::Base;
 
 			public: // Node
 				void draw(Image& target) override {
-					const String& text = content.empty() ? placeholder : repeat(static_cast<short>(content.size()), "•");
-					for (short i = text_begin, y = position.top; y < position.bottom; ++y) {
-						for (short x = position.left; x < position.right; ++x) {
+					const String& text = content.empty() ? placeholder : repeat(static_cast<i16>(content.size()), "•");
+					for (i16 i = text_begin, y = position.top; y < position.bottom; ++y) {
+						for (i16 x = position.left; x < position.right; ++x) {
 							Pixel& p = target.at(x, y);
 
 							draw_style(p);
@@ -1555,17 +1683,17 @@ namespace Simple {
 					}
 
 					if (looping())
-						target.at(position.left + xcursor, position.top + ycursor).properties[Reverse] = true;
+						target.at(position.left + xcursor, position.top + ycursor).style[To::Base(NodeProperties::Reverse)] = true;
 				}
 
 			public: // Interact
-				bool onkey(const KEY_EVENT_RECORD& key) override {
+				bool onkey(const KeyEvent& key) override {
 					if (key.wVirtualKeyCode == VK_RETURN)
 						looping(!looping());
 
 					if (looping()) {
-						const short width = position.width();
-						const short height = position.height();
+						const i16 width = position.width();
+						const i16 height = position.height();
 
 						switch (key.wVirtualKeyCode) {
 						case VK_LEFT:
@@ -1634,15 +1762,15 @@ namespace Simple {
 					return false;
 				}
 			};
-			class Pin : public Base {
-			public:
+			class Pin final : public Base {
+			public: // Base
 				using Base::Base;
 
 			public: // Node
 				void draw(Image& target) override {
-					const String& text = content.empty() ? placeholder : repeat(static_cast<short>(content.size()), "•");
-					for (short i = text_begin, y = position.top; y < position.bottom; ++y) {
-						for (short x = position.left; x < position.right; ++x) {
+					const String& text = content.empty() ? placeholder : repeat(static_cast<i16>(content.size()), "•");
+					for (i16 i = text_begin, y = position.top; y < position.bottom; ++y) {
+						for (i16 x = position.left; x < position.right; ++x) {
 							Pixel& p = target.at(x, y);
 
 							draw_style(p);
@@ -1653,17 +1781,17 @@ namespace Simple {
 					}
 
 					if (looping())
-						target.at(position.left + xcursor, position.top + ycursor).properties[Reverse] = true;
+						target.at(position.left + xcursor, position.top + ycursor).style[To::Base(NodeProperties::Reverse)] = true;
 				}
 
 			public: // Interact
-				bool onkey(const KEY_EVENT_RECORD& key) override {
+				bool onkey(const KeyEvent& key) override {
 					if (key.wVirtualKeyCode == VK_RETURN)
 						looping(!looping());
 
 					if (looping()) {
-						const short width = position.width();
-						const short height = position.height();
+						const i16 width = position.width();
+						const i16 height = position.height();
 
 						switch (key.wVirtualKeyCode) {
 						case VK_LEFT:
@@ -1737,8 +1865,8 @@ namespace Simple {
 }
 
 template<typename T>
-concept NodeCallback = std::invocable<T, SharedPointer<Simple::Base::Node>>
-&& std::same_as<std::invoke_result_t<T, SharedPointer<Simple::Base::Node>>, void>;
+concept NodeCallback = std::invocable<T, Simple::SharedMemory<Simple::Base::Node>>
+&& std::same_as<std::invoke_result_t<T, Simple::SharedMemory<Simple::Base::Node>>, void>;
 
 template<typename T>
 concept ButtonLinkCallback = std::invocable<T&> && std::same_as<std::invoke_result_t<T&>, void>;
@@ -1753,14 +1881,14 @@ concept TypeText = std::same_as<std::remove_cvref_t<T>, std::string>
 template<typename T>
 struct is_node_shared_pointer : std::false_type {};
 template<typename T> requires std::derived_from<T, Simple::Base::Node>
-struct is_node_shared_pointer<SharedPointer<T>> : std::true_type {};
+struct is_node_shared_pointer<Simple::SharedMemory<T>> : std::true_type {};
 template<typename T>
 concept ChildOfNode = is_node_shared_pointer<std::remove_cvref_t<T>>::value;
 
 template<typename T>
 struct is_interact_shared_pointer : std::false_type {};
 template<typename T> requires std::derived_from<T, Simple::Base::Interact>
-struct is_interact_shared_pointer<SharedPointer<T>> : std::true_type {};
+struct is_interact_shared_pointer<Simple::SharedMemory<T>> : std::true_type {};
 template<typename T>
 concept ChildOfInteract = is_interact_shared_pointer<std::remove_cvref_t<T>>::value;
 
@@ -1772,235 +1900,235 @@ template <typename T>
 concept is_shared_pointer = is_shared_pointer_type<std::remove_cvref_t<T>>::value;
 
 template<NodeCallback T>
-SharedPointer<Simple::Base::Node> operator |(
-	SharedPointer<Simple::Base::Node> left,
+Simple::SharedMemory<Simple::Base::Node> operator |(
+	Simple::SharedMemory<Simple::Base::Node> left,
 	T&& right) {
 	std::invoke(std::forward<T>(right), left);
 	return left;
 }
 
-void bold(SharedPointer<Simple::Base::Node> node) {
-	node->properties[Simple::Base::Bold] = true;
+void bold(const Simple::SharedMemory<Simple::Base::Node>& node) {
+	node->properties[Simple::To::Base(Simple::Base::NodeProperties::Bold)] = true;
 }
-void dim(SharedPointer<Simple::Base::Node> node) {
-	node->properties[Simple::Base::Dim] = true;
+void dim(const Simple::SharedMemory<Simple::Base::Node>& node) {
+	node->properties[Simple::To::Base(Simple::Base::NodeProperties::Dim)] = true;
 }
-void italic(SharedPointer<Simple::Base::Node> node) {
-	node->properties[Simple::Base::Italic] = true;
+void italic(const Simple::SharedMemory<Simple::Base::Node>& node) {
+	node->properties[Simple::To::Base(Simple::Base::NodeProperties::Italic)] = true;
 }
-void underline(SharedPointer<Simple::Base::Node> node) {
-	node->properties[Simple::Base::Underline] = true;
+void underline(const Simple::SharedMemory<Simple::Base::Node>& node) {
+	node->properties[Simple::To::Base(Simple::Base::NodeProperties::Underline)] = true;
 }
-void blinking(SharedPointer<Simple::Base::Node> node) {
-	node->properties[Simple::Base::Blinking] = true;
+void blinking(const Simple::SharedMemory<Simple::Base::Node>& node) {
+	node->properties[Simple::To::Base(Simple::Base::NodeProperties::Blinking)] = true;
 }
-void reverse(SharedPointer<Simple::Base::Node> node) {
-	node->properties[Simple::Base::Reverse] = true;
+void reverse(const Simple::SharedMemory<Simple::Base::Node>& node) {
+	node->properties[Simple::To::Base(Simple::Base::NodeProperties::Reverse)] = true;
 }
-void hidden(SharedPointer<Simple::Base::Node> node) {
-	node->properties[Simple::Base::Hidden] = true;
+void hidden(const Simple::SharedMemory<Simple::Base::Node>& node) {
+	node->properties[Simple::To::Base(Simple::Base::NodeProperties::Hidden)] = true;
 }
-void strikethrough(SharedPointer<Simple::Base::Node> node) {
-	node->properties[Simple::Base::Strikethrough] = true;
+void strikethrough(const Simple::SharedMemory<Simple::Base::Node>& node) {
+	node->properties[Simple::To::Base(Simple::Base::NodeProperties::Strikethrough)] = true;
 }
-void hflex(SharedPointer<Simple::Base::Node> node) {
-	node->properties[Simple::Base::HorizontalFlex] = true;
+void hflex(const Simple::SharedMemory<Simple::Base::Node>& node) {
+	node->properties[Simple::To::Base(Simple::Base::NodeProperties::HorizontalFlex)] = true;
 }
-void vflex(SharedPointer<Simple::Base::Node> node) {
-	node->properties[Simple::Base::VerticalFlex] = true;
+void vflex(const Simple::SharedMemory<Simple::Base::Node>& node) {
+	node->properties[Simple::To::Base(Simple::Base::NodeProperties::VerticalFlex)] = true;
 }
 auto foreground(Simple::Foreground color) {
-	return [color](SharedPointer<Simple::Base::Node> node) { node->foreground = color; };
+	return [color](const Simple::SharedMemory<Simple::Base::Node>& node) { node->foreground = color; };
 }
 auto background(Simple::Background color) {
-	return [color](SharedPointer<Simple::Base::Node> node) { node->background = color; };
+	return [color](const Simple::SharedMemory<Simple::Base::Node>& node) { node->background = color; };
 }
-auto width(short size) {
-	return [size](SharedPointer<Simple::Base::Node> node) {
-		node->properties[Simple::Base::InitializedWidth] = true;
+auto width(Simple::i16 size) {
+	return [size](const Simple::SharedMemory<Simple::Base::Node>& node) {
+		node->properties[Simple::To::Base(Simple::Base::NodeProperties::InitializedWidth)] = true;
 		node->width = size;
 		};
 }
-auto height(short size) {
-	return [size](SharedPointer<Simple::Base::Node> node) {
-		node->properties[Simple::Base::InitializedHeight] = true;
+auto height(Simple::i16 size) {
+	return [size](const Simple::SharedMemory<Simple::Base::Node>& node) {
+		node->properties[Simple::To::Base(Simple::Base::NodeProperties::InitializedHeight)] = true;
 		node->height = size;
 		};
 }
 
 template<TypeText T>
-SharedPointer<Simple::Base::Text> text(T&& value) {
+Simple::SharedMemory<Simple::Base::Text> text(T&& value) {
 	return std::make_shared<Simple::Base::Text>(std::forward<T>(value));
 }
 template<ChildOfNode... T>
-SharedPointer<Simple::Base::HorizontalLayout> hlayout(T&&... nodes) {
+Simple::SharedMemory<Simple::Base::HorizontalLayout> hlayout(T&&... nodes) {
 	return std::make_shared<Simple::Base::HorizontalLayout>(
-		InitializerList<SharedPointer<Simple::Base::Node>> { std::forward<T>(nodes)... }
+		Simple::Vector<Simple::SharedMemory<Simple::Base::Node>> { std::forward<T>(nodes)... }
 	);
 }
 template<ChildOfNode... T>
-SharedPointer<Simple::Base::VerticalLayout> vlayout(T&&... nodes) {
+Simple::SharedMemory<Simple::Base::VerticalLayout> vlayout(T&&... nodes) {
 	return std::make_shared<Simple::Base::VerticalLayout>(
-		InitializerList<SharedPointer<Simple::Base::Node>> { std::forward<T>(nodes)... }
+		Simple::Vector<Simple::SharedMemory<Simple::Base::Node>> { std::forward<T>(nodes)... }
 	);
 }
-SharedPointer<Simple::Base::Filler> filler() {
+Simple::SharedMemory<Simple::Base::Filler> filler() {
 	return std::make_shared<Simple::Base::Filler>();
 }
-SharedPointer<Simple::Base::HorizontalFiller> hfiller() {
+Simple::SharedMemory<Simple::Base::HorizontalFiller> hfiller() {
 	return std::make_shared<Simple::Base::HorizontalFiller>();
 }
-SharedPointer<Simple::Base::VerticalFiller> vfiller() {
+Simple::SharedMemory<Simple::Base::VerticalFiller> vfiller() {
 	return std::make_shared<Simple::Base::VerticalFiller>();
 }
-SharedPointer<Simple::Base::Space> space() {
+Simple::SharedMemory<Simple::Base::Space> space() {
 	return std::make_shared<Simple::Base::Space>();
 }
 template<TypeNumber T>
-SharedPointer<Simple::Base::Space> space(T&& value) {
+Simple::SharedMemory<Simple::Base::Space> space(T&& value) {
 	return std::make_shared<Simple::Base::Space>(std::forward<T>(value));
 }
-SharedPointer<Simple::Base::HorizontalSpace> hspace() {
+Simple::SharedMemory<Simple::Base::HorizontalSpace> hspace() {
 	return std::make_shared<Simple::Base::HorizontalSpace>();
 }
 template<TypeNumber T>
-SharedPointer<Simple::Base::HorizontalSpace> hspace(T&& value) {
+Simple::SharedMemory<Simple::Base::HorizontalSpace> hspace(T&& value) {
 	return std::make_shared<Simple::Base::HorizontalSpace>(std::forward<T>(value));
 }
-SharedPointer<Simple::Base::VerticalSpace> vspace() {
+Simple::SharedMemory<Simple::Base::VerticalSpace> vspace() {
 	return std::make_shared<Simple::Base::VerticalSpace>();
 }
 template<TypeNumber T>
-SharedPointer<Simple::Base::VerticalSpace> vspace(T&& value) {
+Simple::SharedMemory<Simple::Base::VerticalSpace> vspace(T&& value) {
 	return std::make_shared<Simple::Base::VerticalSpace>(std::forward<T>(value));
 }
-SharedPointer<Simple::Base::HorizontalSeparator> hseparator() {
+Simple::SharedMemory<Simple::Base::HorizontalSeparator> hseparator() {
 	return std::make_shared<Simple::Base::HorizontalSeparator>();
 }
 namespace border {
 	template<ChildOfNode T>
-	SharedPointer<Simple::Base::Border> ascii(T&& node) {
+	Simple::SharedMemory<Simple::Base::Border> ascii(T&& node) {
 		return std::make_shared<Simple::Base::Border>(std::forward<T>(node), "-|+++++++++");
 	}
 	template<ChildOfNode T>
-	SharedPointer<Simple::Base::Border> light(T&& node) {
+	Simple::SharedMemory<Simple::Base::Border> light(T&& node) {
 		return std::make_shared<Simple::Base::Border>(std::forward<T>(node), "─│┌┬┐├┼┤└┴┘");
 	}
 	template<ChildOfNode T>
-	SharedPointer<Simple::Base::Border> heavy(T&& node) {
+	Simple::SharedMemory<Simple::Base::Border> heavy(T&& node) {
 		return std::make_shared<Simple::Base::Border>(std::forward<T>(node), "━┃┏┳┓┣╋┫┗┻┛");
 	}
 	template<ChildOfNode T>
-	SharedPointer<Simple::Base::Border> double_light(T&& node) {
+	Simple::SharedMemory<Simple::Base::Border> double_light(T&& node) {
 		return std::make_shared<Simple::Base::Border>(std::forward<T>(node), "═║╔╦╗╠╬╣╚╩╝");
 	}
 	template<ChildOfNode T>
-	SharedPointer<Simple::Base::Border> rounded(T&& node) {
+	Simple::SharedMemory<Simple::Base::Border> rounded(T&& node) {
 		return std::make_shared<Simple::Base::Border>(std::forward<T>(node), "─│╭┬╮├┼┤╰┴╯");
 	}
 	template<ChildOfNode T>
-	SharedPointer<Simple::Base::Border> hdouble(T&& node) {
+	Simple::SharedMemory<Simple::Base::Border> hdouble(T&& node) {
 		return std::make_shared<Simple::Base::Border>(std::forward<T>(node), "═│╒╤╕╞╪╡╘╧╛");
 	}
 	template<ChildOfNode T>
-	SharedPointer<Simple::Base::Border> vdouble(T&& node) {
+	Simple::SharedMemory<Simple::Base::Border> vdouble(T&& node) {
 		return std::make_shared<Simple::Base::Border>(std::forward<T>(node), "─║╓╥╖╟╫╢╙╨╜");
 	}
 	template<ChildOfNode T>
-	SharedPointer<Simple::Base::Border> hheavy(T&& node) {
+	Simple::SharedMemory<Simple::Base::Border> hheavy(T&& node) {
 		return std::make_shared<Simple::Base::Border>(std::forward<T>(node), "━│┍┯┑┝┿┥┕┷┙");
 	}
 	template<ChildOfNode T>
-	SharedPointer<Simple::Base::Border> vheavy(T&& node) {
+	Simple::SharedMemory<Simple::Base::Border> vheavy(T&& node) {
 		return std::make_shared<Simple::Base::Border>(std::forward<T>(node), "─┃┎┰┒┞╀┦┖┸┚");
 	}
 	template<ChildOfNode T>
-	SharedPointer<Simple::Base::Border> triple_dash(T&& node) {
+	Simple::SharedMemory<Simple::Base::Border> triple_dash(T&& node) {
 		return std::make_shared<Simple::Base::Border>(std::forward<T>(node), "┄┆┌┬┐├┼┤└┴┘");
 	}
 	template<ChildOfNode T>
-	SharedPointer<Simple::Base::Border> quad_dash(T&& node) {
+	Simple::SharedMemory<Simple::Base::Border> quad_dash(T&& node) {
 		return std::make_shared<Simple::Base::Border>(std::forward<T>(node), "┈┊┌┬┐├┼┤└┴┘");
 	}
 	template<ChildOfNode T>
-	SharedPointer<Simple::Base::Border> double_dash(T&& node) {
+	Simple::SharedMemory<Simple::Base::Border> double_dash(T&& node) {
 		return std::make_shared<Simple::Base::Border>(std::forward<T>(node), "╌╎┌┬┐├┼┤└┴┘");
 	}
 }
 
 template<TypeText N>
-SharedPointer<Simple::Base::Button> button(N&& name) {
+Simple::SharedMemory<Simple::Base::Button> button(N&& name) {
 	return std::make_shared<Simple::Base::Button>(std::forward<N>(name));
 }
 template<TypeText N, ButtonLinkCallback F>
-SharedPointer<Simple::Base::Button> button(N&& name, F&& callback) {
+Simple::SharedMemory<Simple::Base::Button> button(N&& name, F&& callback) {
 	return std::make_shared<Simple::Base::Button>(std::forward<N>(name), std::forward<F>(callback));
 }
 template<ChildOfInteract... T>
-SharedPointer<Simple::Base::HorizontalContainer> hcontainer(T&&... interacts) {
+Simple::SharedMemory<Simple::Base::HorizontalContainer> hcontainer(T&&... interacts) {
 	return std::make_shared<Simple::Base::HorizontalContainer>(
-		InitializerList<SharedPointer<Simple::Base::Interact>>{ std::forward<T>(interacts)... }
+		Simple::Vector<Simple::SharedMemory<Simple::Base::Interact>>{ std::forward<T>(interacts)... }
 	);
 }
 template<ChildOfInteract... T>
-SharedPointer<Simple::Base::VerticalContainer> vcontainer(T&&... interacts) {
+Simple::SharedMemory<Simple::Base::VerticalContainer> vcontainer(T&&... interacts) {
 	return std::make_shared<Simple::Base::VerticalContainer>(
-		InitializerList<SharedPointer<Simple::Base::Interact>>{ std::forward<T>(interacts)... }
+		Simple::Vector<Simple::SharedMemory<Simple::Base::Interact>>{ std::forward<T>(interacts)... }
 	);
 }
 template<TypeText N>
-SharedPointer<Simple::Base::Link> link(N&& name) {
+Simple::SharedMemory<Simple::Base::Link> link(N&& name) {
 	return std::make_shared<Simple::Base::Button>(std::forward<N>(name));
 }
 template<TypeText N, ButtonLinkCallback F>
-SharedPointer<Simple::Base::Link> link(N&& name, F&& callback) {
+Simple::SharedMemory<Simple::Base::Link> link(N&& name, F&& callback) {
 	return std::make_shared<Simple::Base::Link>(std::forward<N>(name), std::forward<F>(callback));
 }
 template<TypeText... T>
-SharedPointer<Simple::Base::CheckBoxList> checkbox_list(T&&... items) {
+Simple::SharedMemory<Simple::Base::CheckBoxList> checkbox_list(T&&... items) {
 	return std::make_shared<Simple::Base::CheckBoxList>(
-		InitializerList<String>{ std::forward<T>(items)... }
+		Simple::Vector<Simple::String>{ std::forward<T>(items)... }
 	);
 }
-SharedPointer<Simple::Base::CheckBoxList> checkbox_list(InitializerList<String> item) {
+Simple::SharedMemory<Simple::Base::CheckBoxList> checkbox_list(Simple::Vector<Simple::String> item) {
 	return std::make_shared<Simple::Base::CheckBoxList>(std::move(item));
 }
 template<TypeText... T>
-SharedPointer<Simple::Base::RadioBoxList> radiobox_list(T&&... items) {
+Simple::SharedMemory<Simple::Base::RadioBoxList> radiobox_list(T&&... items) {
 	return std::make_shared<Simple::Base::RadioBoxList>(
-		InitializerList<String>{ std::forward<T>(items)... }
+		Simple::Vector<Simple::String>{ std::forward<T>(items)... }
 	);
 }
-SharedPointer<Simple::Base::RadioBoxList> radiobox_list(InitializerList<String> item) {
+Simple::SharedMemory<Simple::Base::RadioBoxList> radiobox_list(Simple::Vector<Simple::String> item) {
 	return std::make_shared<Simple::Base::RadioBoxList>(std::move(item));
 }
 namespace input {
-	SharedPointer<Simple::Base::Input::Text> text() {
+	Simple::SharedMemory<Simple::Base::Input::Text> text() {
 		return std::make_shared<Simple::Base::Input::Text>();
 	}
 	template<TypeText T>
-	SharedPointer<Simple::Base::Input::Text> text(T&& placeholder) {
+	Simple::SharedMemory<Simple::Base::Input::Text> text(T&& placeholder) {
 		return std::make_shared<Simple::Base::Input::Text>(std::forward<T>(placeholder));
 	}
-	SharedPointer<Simple::Base::Input::Number> number() {
+	Simple::SharedMemory<Simple::Base::Input::Number> number() {
 		return std::make_shared<Simple::Base::Input::Number>();
 	}
 	template<TypeText T>
-	SharedPointer<Simple::Base::Input::Number> number(T&& placeholder) {
+	Simple::SharedMemory<Simple::Base::Input::Number> number(T&& placeholder) {
 		return std::make_shared<Simple::Base::Input::Number>(std::forward<T>(placeholder));
 	}
-	SharedPointer<Simple::Base::Input::Password> password() {
+	Simple::SharedMemory<Simple::Base::Input::Password> password() {
 		return std::make_shared<Simple::Base::Input::Password>();
 	}
 	template<TypeText T>
-	SharedPointer<Simple::Base::Input::Password> password(T&& placeholder) {
+	Simple::SharedMemory<Simple::Base::Input::Password> password(T&& placeholder) {
 		return std::make_shared<Simple::Base::Input::Password>(std::forward<T>(placeholder));
 	}
-	SharedPointer<Simple::Base::Input::Pin> pin() {
+	Simple::SharedMemory<Simple::Base::Input::Pin> pin() {
 		return std::make_shared<Simple::Base::Input::Pin>();
 	}
 	template<TypeText T>
-	SharedPointer<Simple::Base::Input::Pin> pin(T&& placeholder) {
+	Simple::SharedMemory<Simple::Base::Input::Pin> pin(T&& placeholder) {
 		return std::make_shared<Simple::Base::Input::Pin>(std::forward<T>(placeholder));
 	}
 }
@@ -2061,7 +2189,7 @@ Application& start(Application& left) {
 			ReadConsoleInput(handle, record, 128, &events);
 
 			for (DWORD i = 0; i < events; ++i) {
-				const KEY_EVENT_RECORD& key = record[i].Event.KeyEvent;
+				const Simple::KeyEvent& key = record[i].Event.KeyEvent;
 
 				if (key.bKeyDown) {
 					left.interact.top()->onkey(key);
